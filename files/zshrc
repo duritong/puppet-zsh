@@ -1,0 +1,139 @@
+# keychain
+################################################################
+
+if [ -e $HOME/.ssh/id_rsa -a -x /usr/bin/keychain ]; then
+  eval `keychain --eval --nogui -q id_rsa`
+fi
+
+
+# ssh agent forwarding inside tmux
+################################################################
+
+function preexec() {
+  if [[ -n $TMUX ]]; then
+    NEW_SSH_AUTH_SOCK=`tmux showenv|grep ^SSH_AUTH_SOCK|cut -d = -f 2`
+    if [[ -n $NEW_SSH_AUTH_SOCK ]] && [[ -S $NEW_SSH_AUTH_SOCK ]]; then
+      SSH_AUTH_SOCK=$NEW_SSH_AUTH_SOCK
+    fi
+  fi
+}
+
+# exports
+################################################################
+export EDITOR=/usr/bin/vi
+
+export PATH="$HOME/bin:$PATH"
+
+export LESS="-F -X -R"
+
+export GREP_COLOR="1;33"
+
+# zsh history
+export HISTSIZE=100000
+export SAVEHIST=$HISTSIZE
+export HISTFILE=~/.zsh_history
+
+export WORKON_HOME=$HOME/.virtualenvs
+if [ -d $WORKON_HOME ] ; then
+  if [ -f "/usr/bin/virtualenvwrapper_bashrc" ] ; then
+    source /usr/bin/virtualenvwrapper_bashrc
+  elif [ -f "/usr/bin/virtualenvwrapper.sh" ] ; then
+    source /usr/bin/virtualenvwrapper.sh
+  elif [ -f "/etc/bash_completion.d/virtualenvwrapper" ] ; then
+    source /etc/bash_completion.d/virtualenvwrapper
+  fi
+fi
+
+# colorized manpages:
+export LESS_TERMCAP_mb=$'\E[01;31m'
+export LESS_TERMCAP_md=$'\E[01;31m'
+export LESS_TERMCAP_me=$'\E[0m'
+export LESS_TERMCAP_se=$'\E[0m'                           
+export LESS_TERMCAP_so=$'\E[01;44;33m'                                 
+export LESS_TERMCAP_ue=$'\E[0m'
+export LESS_TERMCAP_us=$'\E[01;32m'
+
+# aliases
+################################################################
+alias ls='ls -hF --color'
+alias ispell='ispell -x'
+alias apt-purge='dpkg --get-selections | grep deinstall$ | sed "s/deinstall$/purge/" | dpkg --set-selections; apt-get dselect-upgrade'
+alias rmpyc='find . -name "*.pyc" -exec rm -v {} \;'
+alias grep='grep --color=auto'
+alias nosetests='nosetests --rednose'
+alias youtube-dl='youtube-dl -t'
+alias t='task'
+alias ports='lsof -i -P -sTCP:LISTEN'
+
+# options
+################################################################
+setopt hist_verify
+setopt hist_ignore_dups
+setopt append_history
+
+# functions
+################################################################
+function f()
+{
+  find . -path '*/.git' -prune \
+  -o -path '*/.hg' -prune \
+  -o -path '*/.svn' -prune \
+  -o -name '*.swp' -prune \
+  -o -name '*.pyc' -prune \
+  -o -type f -print | xargs grep -l $1
+}
+
+function 80char()
+{
+  find . -path '*/.git' -prune \
+  -o -path '*/.hg' -prune \
+  -o -path '*/.svn' -prune \
+  -o -name '*.swp' -prune \
+  -o -name '*.pyc' -prune \
+  -o -type f -print | xargs grep -l '.\{80,\}'
+}
+
+function replace()
+{
+  find . \( ! -regex '.*/\..*' \) -type f | xargs perl -pi -e "s/$1/$2/g"
+}
+
+# prompt
+################################################################
+setopt prompt_subst
+
+function vcs_char {
+  git branch >/dev/null 2>/dev/null && echo '±' && return
+  hg root >/dev/null 2>/dev/null && echo '☿' && return
+  echo '○'
+}
+
+
+if (( EUID == 0 )); then
+  PROMPT=$'%m %{\e[0;31m%}%B$(vcs_char)%b%{\e[0m%} %~ '
+else
+  PROMPT=$'%m %{\e[0;34m%}%B$(vcs_char)%b%{\e[0m%} %~ '
+fi
+
+# terminal title
+################################################################
+case $TERM in (xterm*|rxvt*)
+  precmd () { print -Pn "\e]0;%n@%m: %~\a" }
+  preexec () { print -Pn "\e]0;%n@%m: $*\a" }
+  ;;
+esac
+
+# completions
+################################################################
+autoload -U compinit ;compinit
+zstyle ':completion:*' special-dirs ..
+
+# key bindings
+################################################################
+
+# use emacs like command line editing:
+bindkey -e
+
+# search history on <up> key instead of paging previous commands:
+bindkey "\e[A" history-search-backward
+bindkey "\e[B" history-search-forward
