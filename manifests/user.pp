@@ -1,6 +1,6 @@
 define zsh::user($ensure=present, $path="/usr/bin/zsh") {
 
-  exec { "chsh -s $zsh_path $name":
+  exec { "chsh -s $path $name":
     unless => "grep -E '^${name}.+:${$path}$' /etc/passwd",
   }
 
