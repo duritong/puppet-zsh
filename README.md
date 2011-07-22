@@ -28,3 +28,8 @@ If you include the zsh class zsh will be installed with a zsh configuration
 tailored to my personal preferences: 
 
     include zsh
+
+There is also an `zsh::user` resource which can be used for setting zsh
+as the default shell for that user:
+
+    zsh::user { "uggedal": }
