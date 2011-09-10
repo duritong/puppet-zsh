@@ -141,4 +141,6 @@ bindkey "\e[B" history-search-forward
 
 # plugins
 ################################################################
+
 source /usr/share/zsh/plugins/syntax-highlighting/zsh-syntax-highlighting.zsh
+export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
