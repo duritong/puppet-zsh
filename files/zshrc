@@ -138,3 +138,7 @@ bindkey -e
 # search history on <up> key instead of paging previous commands:
 bindkey "\e[A" history-search-backward
 bindkey "\e[B" history-search-forward
+
+# plugins
+################################################################
+source /usr/share/zsh/plugins/syntax-highlighting/zsh-syntax-highlighting.zsh
