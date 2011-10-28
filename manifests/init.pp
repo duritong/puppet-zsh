@@ -13,6 +13,6 @@ class zsh {
     recurse => true,
     mode => 644,
     ignore => '.git',
-    require => File["/etc/vim/vimrc"],
+    require => Package['vim'],
   }
 }
