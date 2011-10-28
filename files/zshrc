@@ -1,164 +1,43 @@
-# keychain
-################################################################
+# /etc/zsh/zshrc: system-wide .zshrc file for zsh(1).
+#
+# This file is sourced only for interactive shells. It
+# should contain commands to set up aliases, functions,
+# options, key bindings, etc.
+#
+# Global Order: zshenv, zprofile, zshrc, zlogin
 
-if [ -e $HOME/.ssh/id_rsa -a -x /usr/bin/keychain ]; then
-  eval `keychain --eval --nogui -q id_rsa`
+READNULLCMD=${PAGER:-/usr/bin/pager}
+
+if [[ "$TERM" != emacs ]]; then
+[[ -z "$terminfo[kdch1]" ]] || bindkey -M emacs "$terminfo[kdch1]" delete-char
+[[ -z "$terminfo[khome]" ]] || bindkey -M emacs "$terminfo[khome]" beginning-of-line
+[[ -z "$terminfo[kend]" ]] || bindkey -M emacs "$terminfo[kend]" end-of-line
+[[ -z "$terminfo[kich1]" ]] || bindkey -M emacs "$terminfo[kich1]" overwrite-mode
+[[ -z "$terminfo[kdch1]" ]] || bindkey -M vicmd "$terminfo[kdch1]" vi-delete-char
+[[ -z "$terminfo[khome]" ]] || bindkey -M vicmd "$terminfo[khome]" vi-beginning-of-line
+[[ -z "$terminfo[kend]" ]] || bindkey -M vicmd "$terminfo[kend]" vi-end-of-line
+[[ -z "$terminfo[kich1]" ]] || bindkey -M vicmd "$terminfo[kich1]" overwrite-mode
+
+[[ -z "$terminfo[cuu1]" ]] || bindkey -M viins "$terminfo[cuu1]" vi-up-line-or-history
+[[ -z "$terminfo[cuf1]" ]] || bindkey -M viins "$terminfo[cuf1]" vi-forward-char
+[[ -z "$terminfo[kcuu1]" ]] || bindkey -M viins "$terminfo[kcuu1]" vi-up-line-or-history
+[[ -z "$terminfo[kcud1]" ]] || bindkey -M viins "$terminfo[kcud1]" vi-down-line-or-history
+[[ -z "$terminfo[kcuf1]" ]] || bindkey -M viins "$terminfo[kcuf1]" vi-forward-char
+[[ -z "$terminfo[kcub1]" ]] || bindkey -M viins "$terminfo[kcub1]" vi-backward-char
+
+# ncurses fogyatekos
+[[ "$terminfo[kcuu1]" == "O"* ]] && bindkey -M viins "${terminfo[kcuu1]/O/[}" vi-up-line-or-history
+[[ "$terminfo[kcud1]" == "O"* ]] && bindkey -M viins "${terminfo[kcud1]/O/[}" vi-down-line-or-history
+[[ "$terminfo[kcuf1]" == "O"* ]] && bindkey -M viins "${terminfo[kcuf1]/O/[}" vi-forward-char
+[[ "$terminfo[kcub1]" == "O"* ]] && bindkey -M viins "${terminfo[kcub1]/O/[}" vi-backward-char
+[[ "$terminfo[khome]" == "O"* ]] && bindkey -M viins "${terminfo[khome]/O/[}" beginning-of-line
+[[ "$terminfo[kend]" == "O"* ]] && bindkey -M viins "${terminfo[kend]/O/[}" end-of-line
+[[ "$terminfo[khome]" == "O"* ]] && bindkey -M emacs "${terminfo[khome]/O/[}" beginning-of-line
+[[ "$terminfo[kend]" == "O"* ]] && bindkey -M emacs "${terminfo[kend]/O/[}" end-of-line
 fi
 
+zstyle ':completion:*:sudo:*' command-path /usr/local/sbin /usr/local/bin \
+			     /usr/sbin /usr/bin /sbin /bin /usr/X11R6/bin
 
-# ssh agent forwarding inside tmux
-################################################################
-
-function preexec() {
-  if [[ -n $TMUX ]]; then
-    NEW_SSH_AUTH_SOCK=`tmux showenv|grep ^SSH_AUTH_SOCK|cut -d = -f 2`
-    if [[ -n $NEW_SSH_AUTH_SOCK ]] && [[ -S $NEW_SSH_AUTH_SOCK ]]; then
-      SSH_AUTH_SOCK=$NEW_SSH_AUTH_SOCK
-    fi
-  fi
-}
-
-# exports
-################################################################
-export EDITOR=/usr/bin/vi
-
-export PATH="$HOME/bin:$PATH"
-
-export LESS="-F -X -R"
-
-export GREP_COLOR="1;33"
-
-# zsh history
-export HISTSIZE=100000
-export SAVEHIST=$HISTSIZE
-export HISTFILE=~/.zsh_history
-
-export WORKON_HOME=$HOME/.virtualenvs
-if [ -d $WORKON_HOME ] ; then
-  if [ -f "/usr/bin/virtualenvwrapper_bashrc" ] ; then
-    source /usr/bin/virtualenvwrapper_bashrc
-  elif [ -f "/usr/bin/virtualenvwrapper.sh" ] ; then
-    source /usr/bin/virtualenvwrapper.sh
-  elif [ -f "/etc/bash_completion.d/virtualenvwrapper" ] ; then
-    source /etc/bash_completion.d/virtualenvwrapper
-  fi
-fi
-
-# colorized manpages:
-export LESS_TERMCAP_mb=$'\E[01;31m'
-export LESS_TERMCAP_md=$'\E[01;31m'
-export LESS_TERMCAP_me=$'\E[0m'
-export LESS_TERMCAP_se=$'\E[0m'                           
-export LESS_TERMCAP_so=$'\E[01;44;33m'                                 
-export LESS_TERMCAP_ue=$'\E[0m'
-export LESS_TERMCAP_us=$'\E[01;32m'
-
-# aliases
-################################################################
-alias ls='ls -hF --color'
-alias ispell='ispell -x'
-alias bc='bc -ql'
-alias apt-purge='dpkg --get-selections | grep deinstall$ | sed "s/deinstall$/purge/" | dpkg --set-selections; apt-get dselect-upgrade'
-alias rmpyc='find . -name "*.pyc" -exec rm -v {} \;'
-alias grep='grep --color=auto'
-alias nosetests='nosetests --rednose'
-alias youtube-dl='youtube-dl -t'
-alias t='task'
-alias ports='lsof -i -P -sTCP:LISTEN'
-
-# options
-################################################################
-setopt hist_verify
-setopt hist_ignore_dups
-setopt append_history
-
-# functions
-################################################################
-function f()
-{
-  find . -path '*/.git' -prune \
-  -o -path '*/.hg' -prune \
-  -o -path '*/.svn' -prune \
-  -o -name '*.swp' -prune \
-  -o -name '*.pyc' -prune \
-  -o -type f -print | xargs grep -l $1
-}
-
-function 80char()
-{
-  find . -path '*/.git' -prune \
-  -o -path '*/.hg' -prune \
-  -o -path '*/.svn' -prune \
-  -o -name '*.swp' -prune \
-  -o -name '*.pyc' -prune \
-  -o -type f -print | xargs grep -l '.\{80,\}'
-}
-
-function replace()
-{
-  find . \( ! -regex '.*/\..*' \) -type f | xargs perl -pi -e "s/$1/$2/g"
-}
-
-# prompt
-################################################################
-setopt prompt_subst
-
-function vcs_char {
-  git branch >/dev/null 2>/dev/null && echo '±' && return
-  hg root >/dev/null 2>/dev/null && echo '☿' && return
-  echo '○'
-}
-
-
-if (( EUID == 0 )); then
-  PROMPT=$'%m %{\e[0;31m%}%B$(vcs_char)%b%{\e[0m%} %~ '
-else
-  PROMPT=$'%m %{\e[0;34m%}%B$(vcs_char)%b%{\e[0m%} %~ '
-fi
-
-# terminal title
-################################################################
-case $TERM in (xterm*|rxvt*)
-  precmd () { print -Pn "\e]0;%n@%m: %~\a" }
-  preexec () { print -Pn "\e]0;%n@%m: $*\a" }
-  ;;
-esac
-
-# completions
-################################################################
-autoload -U compinit ;compinit
-zstyle ':completion:*' special-dirs ..
-
-# key bindings
-################################################################
-
-# use emacs like command line editing:
-bindkey -e
-
-# search history on <up> key instead of paging previous commands:
-bindkey "\e[A" history-search-backward
-bindkey "\e[B" history-search-forward
-
-# plugins
-################################################################
-
-source /usr/share/zsh/plugins/syntax-highlighting/zsh-syntax-highlighting.zsh
-
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
-
-# colors matching solarized light color scheme:
-ZSH_HIGHLIGHT_STYLES[path]='fg=magenta,bold'
-ZSH_HIGHLIGHT_STYLES[globbing]='fg=magenta'
-
-ZSH_HIGHLIGHT_STYLES[command]="fg=blue"
-ZSH_HIGHLIGHT_STYLES[hashed-command]="fg=blue"
-ZSH_HIGHLIGHT_STYLES[builtin]="fg=blue"
-
-ZSH_HIGHLIGHT_STYLES[alias]='fg=magenta'
-ZSH_HIGHLIGHT_STYLES[function]='fg=magenta'
-
-ZSH_HIGHLIGHT_STYLES[back-quoted-argument]="fg=green"
-ZSH_HIGHLIGHT_STYLES[single-quoted-argument]="fg=green"
-ZSH_HIGHLIGHT_STYLES[double-quoted-argument]="fg=green"
-ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]="fg=yellow"
-ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]="fg=yellow"
+unalias run-help
+autoload run-help
