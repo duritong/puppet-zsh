@@ -5,7 +5,7 @@ define zsh::user($ensure=present, $path="/usr/bin/zsh") {
   }
 
   if $name != "root" {
-    file { "/home/$name/.zshrc":
+    file { "/home/${name}/.zshrc":
       ensure => directory,
       owner => $name,
       group => $name,
