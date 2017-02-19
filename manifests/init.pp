@@ -3,9 +3,11 @@ class zsh {
     ensure => present,
   }
 
-  file { "/etc/zsh/zshrc":
-    source => [ "puppet:///modules/site_zsh/zshrc",
-                "puppet:///modules/zsh/zshrc" ],
-    require => Package["zsh"],
+  if $osfamily == 'Debian' {
+    file { "/etc/zsh/zshrc":
+      source => [ "puppet:///modules/site_zsh/zshrc",
+                  "puppet:///modules/zsh/zshrc" ],
+      require => Package["zsh"],
+    }
   }
 }
